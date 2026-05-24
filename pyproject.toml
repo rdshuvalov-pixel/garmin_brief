@@ -1,0 +1,24 @@
+[project]
+name = "hermes-garmin"
+version = "0.1.0"
+description = "Hermes morning recovery brief from Garmin Connect"
+requires-python = ">=3.9"
+dependencies = [
+    "garminconnect",
+    "curl_cffi",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = ["ruff"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"

@@ -1,0 +1,39 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# Data
+data/
+
+# Generated briefs (personal health data)
+web/briefs/*
+!web/briefs/.gitkeep
+morning_brief.html
+
+# Logs / cron
+data/cron.log
+logs/
+*.log
+
+# Legacy (not published)
+garmin-morning_1/
+
+# Secrets dir
+secrets/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/

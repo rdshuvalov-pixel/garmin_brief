@@ -1,0 +1,21 @@
+# Optional: nginx reverse proxy for briefs (HTTPS + port 443)
+# Replace YOUR_DOMAIN and paths, then:
+#   ln -s /etc/nginx/sites-available/hermes-brief /etc/nginx/sites-enabled/
+#   nginx -t && systemctl reload nginx
+#
+# In .env set: BRIEF_PUBLIC_BASE_URL=https://YOUR_DOMAIN
+
+server {
+    listen 80;
+    server_name YOUR_DOMAIN;
+
+    location /briefs/ {
+        alias /opt/hermes-garmin/web/briefs/;
+        index index.html;
+        try_files $uri $uri/ =404;
+    }
+
+    location / {
+        return 301 /briefs/;
+    }
+}
