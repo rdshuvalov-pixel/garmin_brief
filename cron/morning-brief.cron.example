@@ -2,10 +2,10 @@
 # Install: crontab -e  (paste lines below, fix PROJECT if needed)
 #
 # Local: export HERMES_GARMIN_ROOT="$(git rev-parse --show-toplevel)"
-# VPS default: /opt/hermes-garmin
+# VPS default: /opt/garmin-brief
 
 CRON_TZ=Europe/Lisbon
-PROJECT="${HERMES_GARMIN_ROOT:-/opt/hermes-garmin}"
+PROJECT="${HERMES_GARMIN_ROOT:-/opt/garmin-brief}"
 PY="$PROJECT/.venv/bin/python"
 
 0 7 * * * cd "$PROJECT" && "$PY" scripts/run_morning_brief.py --attempt 1 >> data/cron.log 2>&1

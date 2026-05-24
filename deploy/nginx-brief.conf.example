@@ -10,7 +10,7 @@ server {
     server_name YOUR_DOMAIN;
 
     location /briefs/ {
-        alias /opt/hermes-garmin/web/briefs/;
+        alias /opt/garmin-brief/web/briefs/;
         index index.html;
         try_files $uri $uri/ =404;
     }

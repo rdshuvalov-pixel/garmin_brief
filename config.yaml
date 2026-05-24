@@ -1,0 +1,32 @@
+# Параметры навыка garmin-brief (см. Правила навыка.md)
+# Секреты — только в .env; env-переменные перекрывают значения отсюда.
+
+name: garmin-brief
+version: "1.0.0"
+homepage: https://github.com/rdshuvalov-pixel/garmin_brief
+
+# Данные и пользователь
+data_dir: ./data
+user_id: main_user
+timezone: Europe/Lisbon
+
+# LLM (OpenRouter)
+llm_model: qwen/qwen3.6-35b-a3b
+
+# Публикация HTML-брифов
+brief:
+  port: 8765
+  public_base_url: http://127.0.0.1:8765
+
+# Утренний cron
+cron:
+  timezone: Europe/Lisbon
+  final_attempt: 7
+  interval_minutes: 15
+
+# Точки входа (scripts/)
+scripts:
+  login: scripts/login.py
+  run_morning_brief: scripts/run_morning_brief.py
+  publish_brief: scripts/publish_brief.py
+  serve_brief: scripts/serve_brief.py

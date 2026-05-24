@@ -1,73 +1,91 @@
-# Hermes Garmin
+# Garmin Brief
 
-Утренний recovery-бриф из Garmin Connect: детерминированный scoring (Green/Yellow/Red/Grey), короткое сообщение в Telegram и полный LLM-текст в HTML.
+Hermes-навык: утренний recovery-бриф из Garmin Connect — scoring Green/Yellow/Red/Grey, Telegram и LLM HTML.
 
-## Возможности
+Репозиторий: [github.com/rdshuvalov-pixel/garmin_brief](https://github.com/rdshuvalov-pixel/garmin_brief)
 
-- Получение метрик восстановления из Garmin Connect (сон, HRV, Body Battery, stress)
-- Scoring дня без LLM (`signal_scorer`)
-- Короткий Telegram + развёрнутый текст через OpenRouter
-- Публикация HTML в `web/briefs/`
-- Cron с 8 попытками (07:00–08:30) и деплой на VPS
+## Структура навыка
 
-## Быстрый старт (локально)
+```text
+garmin-brief/
+├── README.md           # этот файл
+├── config.yaml         # параметры навыка (не секреты)
+├── .env.example        # шаблон секретов
+├── skills/SKILL.md     # метаданные для Hermes Agent
+├── scripts/            # точки входа
+├── src/                # основная логика (models, jobs, garmin, …)
+├── docs/               # справочники
+├── deploy/             # VPS: systemd, cron
+├── tests/              # pytest
+└── web/                # шаблоны и опубликованные HTML
+```
+
+## Установка
 
 ```bash
-git clone https://github.com/USERNAME/hermes-garmin.git
-cd hermes-garmin
+git clone https://github.com/rdshuvalov-pixel/garmin_brief.git
+cd garmin_brief
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e .
+pip install -e ".[dev]"
 
 cp .env.example .env
 # Заполнить .env — см. таблицу ниже
+```
 
-.venv/bin/python scripts/login.py          # Garmin MFA, один раз
+## Использование
+
+```bash
+.venv/bin/python scripts/login.py                              # Garmin MFA, один раз
 .venv/bin/python scripts/run_morning_brief.py --force --attempt 7
-.venv/bin/python scripts/serve_brief.py    # http://127.0.0.1:8765/briefs/
+.venv/bin/python scripts/serve_brief.py                      # http://127.0.0.1:8765/briefs/
+.venv/bin/python scripts/publish_brief.py --date 2026-05-24  # HTML из JSON
 ```
 
 ## Переменные окружения
 
-Скопируйте `.env.example` в `.env`. **Не коммитьте `.env`.**
+Скопируйте `.env.example` → `.env`. **Не коммитьте `.env`.**
 
 | Переменная | Назначение |
 |------------|------------|
 | `GARMIN_EMAIL` | Логин Garmin Connect |
 | `GARMIN_PASSWORD` | Пароль Garmin Connect |
-| `GARMINTOKENS` | Каталог токенов (по умолчанию `~/.garminconnect`) |
-| `DATA_DIR` | Каталог данных (по умолчанию `./data`) |
+| `GARMINTOKENS` | Каталог токенов (`~/.garminconnect`) |
+| `DATA_DIR` | Каталог данных (дефолт в `config.yaml`) |
 | `USER_ID` | Идентификатор пользователя |
-| `TIMEZONE` | Часовой пояс (например `Europe/Lisbon`) |
-| `OPENROUTER_API_KEY` | Ключ OpenRouter для LLM-текста |
+| `TIMEZONE` | Часовой пояс |
+| `OPENROUTER_API_KEY` | Ключ OpenRouter |
 | `LLM_MODEL` | Модель OpenRouter |
-| `TELEGRAM_BOT_TOKEN` | Токен Telegram-бота |
-| `TELEGRAM_CHAT_ID` | Chat ID для доставки |
-| `BRIEF_PUBLIC_BASE_URL` | Публичный URL HTML-брифов (на VPS — IP/домен, не `127.0.0.1`) |
+| `TELEGRAM_BOT_TOKEN` | Токен бота |
+| `TELEGRAM_CHAT_ID` | Chat ID |
+| `BRIEF_PUBLIC_BASE_URL` | Публичный URL HTML (на VPS — не `127.0.0.1`) |
 
-Опционально для cron/shell (Python не читает): `HERMES_GARMIN_ROOT=/opt/hermes-garmin`
+Несекретные дефолты — в `config.yaml`; env их перекрывает.
 
-## Структура проекта
+## Hermes Agent
 
-```text
-hermes-garmin/
-├── src/hermes/           # основной код
-├── scripts/              # login, run_morning_brief, serve_brief, publish_brief
-├── skills/               # Hermes Agent skill
-├── deploy/               # VPS: systemd, cron, nginx
-├── cron/                 # пример cron для Mac/локально
-├── web/templates/        # шаблон HTML
-└── web/briefs/           # опубликованные брифы (генерируются, не в git)
+Метаданные навыка: [`skills/SKILL.md`](skills/SKILL.md)
+
+Подключение в `~/.hermes/config.yaml`:
+
+```yaml
+skills:
+  external_dirs:
+    - "/path/to/garmin_brief"
+```
+
+Или в чате:
+
+```bash
+hermes chat --skills garmin-brief --workdir "/path/to/garmin_brief"
 ```
 
 ## VPS
 
-Рекомендуемый путь: `/opt/hermes-garmin`
-
 ```bash
-git clone https://github.com/USERNAME/hermes-garmin.git /opt/hermes-garmin
-cd /opt/hermes-garmin
+git clone https://github.com/rdshuvalov-pixel/garmin_brief.git /opt/garmin-brief
+cd /opt/garmin-brief
 cp .env.example .env && nano .env
 bash deploy/install-vps.sh
 .venv/bin/python scripts/login.py
@@ -76,18 +94,18 @@ bash deploy/install-vps.sh
 
 Подробнее: [deploy/README.md](deploy/README.md)
 
-## Hermes Agent
+## Тесты
 
-Skill: `skills/garmin-morning-brief/SKILL.md`
-
-Подключение через `external_dirs` в `~/.hermes/config.yaml` — см. [skills/README.md](skills/README.md)
+```bash
+.venv/bin/pytest tests/ -q
+```
 
 ## Секреты
 
 - Секреты только в `.env` (локально и на VPS)
-- В репозитории — только `.env.example` без реальных значений
-- Garmin-токены хранятся в `GARMINTOKENS` (по умолчанию `~/.garminconnect`)
+- В репозитории — `.env.example` и `config.yaml` без ключей
+- Garmin-токены — в `GARMINTOKENS`
 
 ## Лицензия
 
-MIT (skill metadata)
+MIT
