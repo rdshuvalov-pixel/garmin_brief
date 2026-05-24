@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "",
+  "outputDirectory": "web",
+  "framework": null,
+  "rewrites": [
+    { "source": "/", "destination": "/briefs/index.html" }
+  ]
+}

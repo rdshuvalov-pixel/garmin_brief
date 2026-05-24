@@ -37,3 +37,6 @@ secrets/
 .DS_Store
 .idea/
 .vscode/
+
+# Vercel local link metadata
+.vercel/

@@ -59,7 +59,10 @@ cp .env.example .env
 | `LLM_MODEL` | Модель OpenRouter |
 | `TELEGRAM_BOT_TOKEN` | Токен бота |
 | `TELEGRAM_CHAT_ID` | Chat ID |
-| `BRIEF_PUBLIC_BASE_URL` | Публичный URL HTML (на VPS — не `127.0.0.1`) |
+| `BRIEF_PUBLIC_BASE_URL` | Публичный URL HTML (`https://….vercel.app`) |
+| `VERCEL_TOKEN` | Токен Vercel (VPS, auto-deploy) |
+| `VERCEL_ORG_ID` | ID организации Vercel |
+| `VERCEL_PROJECT_ID` | ID проекта Vercel |
 
 Несекретные дефолты — в `config.yaml`; env их перекрывает.
 
@@ -81,18 +84,22 @@ skills:
 hermes chat --skills garmin-brief --workdir "/path/to/garmin_brief"
 ```
 
-## VPS
+## VPS + Vercel
+
+**VPS** — cron, Garmin, генерация. **Vercel** — публичные HTML-брифы.
 
 ```bash
 git clone https://github.com/rdshuvalov-pixel/garmin_brief.git /opt/garmin-brief
 cd /opt/garmin-brief
 cp .env.example .env && nano .env
-bash deploy/install-vps.sh
+apt install -y nodejs
+BRIEF_HOST=vercel bash deploy/install-vps.sh
 .venv/bin/python scripts/login.py
-# crontab ← deploy/morning-brief.cron.vps
 ```
 
-Подробнее: [deploy/README.md](deploy/README.md)
+Инструкция: [docs/deploy-vercel.md](docs/deploy-vercel.md) · [deploy/README.md](deploy/README.md)
+
+## Локально (без Vercel)
 
 ## Тесты
 

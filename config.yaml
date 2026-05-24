@@ -16,7 +16,9 @@ llm_model: qwen/qwen3.6-35b-a3b
 # Публикация HTML-брифов
 brief:
   port: 8765
-  public_base_url: http://127.0.0.1:8765
+  # Vercel prod URL (без trailing slash)
+  public_base_url: https://your-project.vercel.app
+  host: vercel  # vercel | local
 
 # Утренний cron
 cron:

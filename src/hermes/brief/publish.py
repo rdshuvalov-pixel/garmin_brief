@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from hermes.config import Config
+from hermes.brief.vercel_deploy import deploy_vercel_if_configured
 
 logger = logging.getLogger(__name__)
 
@@ -149,6 +150,7 @@ def publish_html(config: Config, record: dict[str, Any]) -> Path:
     out_path.write_text(page, encoding="utf-8")
     _write_briefs_index(config)
     logger.info("Published HTML to %s (%d bytes)", out_path, out_path.stat().st_size)
+    deploy_vercel_if_configured(config.project_root)
     return out_path
 
 
@@ -192,6 +194,6 @@ def warn_if_local_brief_url(config: Config) -> None:
         if config.telegram_bot_token and config.telegram_chat_id:
             logger.warning(
                 "BRIEF_PUBLIC_BASE_URL=%s — ссылка в Telegram не откроется с телефона. "
-                "Укажи публичный URL VPS или LAN IP Mac.",
+                "Укажи URL Vercel (https://….vercel.app) или публичный IP VPS.",
                 url,
             )

@@ -1,6 +1,6 @@
 ---
 name: garmin-brief
-description: "Утренний recovery-бриф из Garmin Connect: scoring Green/Yellow/Red/Grey, Telegram + LLM HTML, VPS-хостинг."
+description: "Утренний recovery-бриф из Garmin Connect: scoring, Telegram + LLM HTML. VPS генерирует, Vercel отдаёт HTML."
 version: 1.0.0
 author: "rdshuvalov-pixel"
 license: MIT
@@ -11,7 +11,7 @@ required_env:
   - TELEGRAM_BOT_TOKEN
   - TELEGRAM_CHAT_ID
   - BRIEF_PUBLIC_BASE_URL
-tags: [Garmin, Health, Morning Brief, Telegram, Cron, VPS]
+tags: [Garmin, Health, Morning Brief, Telegram, Cron, VPS, Vercel]
 homepage: "https://github.com/rdshuvalov-pixel/garmin_brief"
 ---
 
@@ -39,6 +39,7 @@ cron (07:00–08:30, каждые 15 мин)
   → generate_telegram (шаблон) + build_narrative (OpenRouter LLM)
   → save data/briefs/morning_YYYY-MM-DD.json
   → publish_html → web/briefs/YYYY-MM-DD.html
+  → vercel deploy (если VERCEL_TOKEN) → HTTPS
   → Telegram (короткий текст + brief_url)
 ```
 
@@ -78,15 +79,20 @@ Cron: `cron/morning-brief.cron.example` (локально), `deploy/morning-brie
 | `data/briefs/morning_YYYY-MM-DD.json` | полный бриф + `brief_html` |
 | `web/briefs/YYYY-MM-DD.html` | опубликованная страница |
 
-## Деплой на VPS
+## Деплой (VPS + Vercel)
 
 ```bash
 git clone https://github.com/rdshuvalov-pixel/garmin_brief.git /opt/garmin-brief
 cd /opt/garmin-brief
 cp .env.example .env && nano .env
-bash deploy/install-vps.sh
+# BRIEF_PUBLIC_BASE_URL=https://xxx.vercel.app
+# VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
+
+BRIEF_HOST=vercel bash deploy/install-vps.sh
 .venv/bin/python scripts/login.py
 ```
+
+Подробно: `docs/deploy-vercel.md`
 
 ## Чего не делать
 
