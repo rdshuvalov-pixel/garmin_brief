@@ -39,6 +39,20 @@ fi
 echo "==> Directories"
 mkdir -p "$PROJECT_ROOT/data/raw" "$PROJECT_ROOT/data/briefs" "$PROJECT_ROOT/web/briefs"
 
+TRIGGER_PORT="${TRIGGER_PORT:-8787}"
+if [[ -f "$PROJECT_ROOT/.env" ]] && grep -qE '^TRIGGER_SECRET=.+' "$PROJECT_ROOT/.env" 2>/dev/null; then
+  echo "==> systemd: hermes-brief-trigger (port $TRIGGER_PORT)"
+  sed "s|@PROJECT_ROOT@|$PROJECT_ROOT|g; s|@TRIGGER_PORT@|$TRIGGER_PORT|g" \
+    "$PROJECT_ROOT/deploy/hermes-brief-trigger.service" \
+    > /etc/systemd/system/hermes-brief-trigger.service
+  systemctl daemon-reload
+  systemctl enable hermes-brief-trigger
+  systemctl restart hermes-brief-trigger
+  systemctl --no-pager status hermes-brief-trigger || true
+else
+  echo "==> Trigger server skipped (set TRIGGER_SECRET in .env to enable)"
+fi
+
 if [[ "$BRIEF_HOST" == "vercel" ]]; then
   echo "==> Vercel mode — skipping systemd web server"
   echo "    HTML: docs/deploy-vercel.md"
@@ -67,6 +81,7 @@ if [[ "$BRIEF_HOST" == "vercel" ]]; then
   echo "  2. Set VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID"
   echo "  3. Garmin login: cd $PROJECT_ROOT && $PY scripts/login.py"
   echo "  4. Test deploy: bash $PROJECT_ROOT/scripts/deploy_vercel.sh"
+  echo "  5. Test trigger: curl -H \"Authorization: Bearer \$TRIGGER_SECRET\" http://127.0.0.1:$TRIGGER_PORT/health"
 else
   echo "  1. Edit .env — BRIEF_PUBLIC_BASE_URL=http://$(curl -s ifconfig.me 2>/dev/null || echo VPS_IP):$PORT"
   echo "  2. Garmin login: cd $PROJECT_ROOT && $PY scripts/login.py"

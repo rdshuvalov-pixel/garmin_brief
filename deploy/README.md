@@ -46,14 +46,19 @@ BRIEF_HOST=local bash deploy/install-vps.sh
 | Файл | Назначение |
 |------|------------|
 | `bootstrap-vps.sh` | первый раз: mkdir + git clone + install |
-| `install-vps.sh` | venv, cron hint; systemd только при `BRIEF_HOST=local` |
+| `hermes-brief-trigger.service` | HTTP trigger для Hermes Cloud (:8787) |
+| `install-vps.sh` | venv, cron hint; trigger если TRIGGER_SECRET |
 | `morning-brief.cron.vps` | 8 утренних poll'ов |
 | `hermes-brief-web.service` | локальный web (режим local) |
 | `../vercel.json` | конфиг Vercel (output: web) |
 | `../scripts/deploy_vercel.sh` | ручной деплoy HTML |
 
-## Hermes agent
+## Hermes agent (Cloud)
 
 ```bash
-hermes chat --skills garmin-brief --workdir "/opt/garmin-brief"
+curl -X POST "http://VPS:8787/trigger" \
+  -H "Authorization: Bearer TRIGGER_SECRET" \
+  -d '{"force": true, "attempt": 7}'
 ```
+
+SSH / локальный workdir — см. `skills/SKILL.md`

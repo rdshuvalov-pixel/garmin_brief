@@ -1,0 +1,16 @@
+[Unit]
+Description=Hermes Garmin brief HTTP trigger (Hermes Cloud)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=@PROJECT_ROOT@
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=@PROJECT_ROOT@/.env
+ExecStart=@PROJECT_ROOT@/.venv/bin/python @PROJECT_ROOT@/scripts/trigger_server.py --host 0.0.0.0 --port @TRIGGER_PORT@
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

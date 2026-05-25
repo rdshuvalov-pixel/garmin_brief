@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+import json
 import logging
 import re
 from pathlib import Path
@@ -105,6 +106,14 @@ def markdown_to_html(text: str) -> str:
     return "\n".join(out)
 
 
+def list_brief_dates(briefs_dir: Path) -> list[str]:
+    """Published brief dates, newest first."""
+    return sorted(
+        (p.stem for p in briefs_dir.glob("*.html") if p.name not in ("index.html",)),
+        reverse=True,
+    )
+
+
 def publish_html(config: Config, record: dict[str, Any]) -> Path:
     template_path = config.project_root / "web" / "templates" / "brief.html"
     if not template_path.exists():
@@ -155,18 +164,58 @@ def publish_html(config: Config, record: dict[str, Any]) -> Path:
 
 
 def _write_briefs_index(config: Config) -> None:
-    """Simple index listing available brief HTML files."""
+    """Index page + manifest.json for client-side prev/next navigation."""
     briefs_dir = config.web_briefs_dir
-    dates = sorted(
-        (p.stem for p in briefs_dir.glob("*.html") if p.name != "index.html"),
-        reverse=True,
+    dates = list_brief_dates(briefs_dir)
+
+    manifest_path = briefs_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(dates, ensure_ascii=False), encoding="utf-8")
+
+    rows = "\n".join(
+        f"""      <li class="archive-item">
+        <a href="{html.escape(d)}.html">{html.escape(d)}</a>
+      </li>"""
+        for d in dates
     )
-    items = "\n".join(
-        f'<li><a href="{html.escape(d)}.html">{html.escape(d)}</a></li>' for d in dates
-    )
+    empty = '      <li class="archive-empty">Пока нет опубликованных брифов</li>'
     index_html = f"""<!DOCTYPE html>
-<html lang="ru"><head><meta charset="UTF-8"><title>Брифы</title></head>
-<body><h1>Утренние брифы</h1><ul>{items or '<li>пока нет</li>'}</ul></body></html>"""
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Утренние брифы</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Manrope:wght@400;500;600&display=swap');
+  :root {{
+    --bg: #f5f4f0; --surface: #fff; --border: rgba(0,0,0,0.08);
+    --text: #1a1a18; --text2: #6b6b66; --mono: 'JetBrains Mono', monospace;
+    --sans: 'Manrope', sans-serif; --radius: 10px;
+  }}
+  body {{ font-family: var(--sans); background: var(--bg); color: var(--text); margin: 0; padding: 24px 16px 48px; }}
+  .page {{ max-width: 680px; margin: 0 auto; }}
+  h1 {{ font-size: 22px; font-weight: 600; margin-bottom: 8px; }}
+  .subtitle {{ font-size: 14px; color: var(--text2); margin-bottom: 20px; }}
+  .archive {{ list-style: none; padding: 0; margin: 0; }}
+  .archive-item {{ margin-bottom: 8px; }}
+  .archive-item a {{
+    display: block; padding: 14px 16px; background: var(--surface);
+    border: 0.5px solid var(--border); border-radius: var(--radius);
+    color: var(--text); text-decoration: none; font-family: var(--mono); font-size: 14px;
+  }}
+  .archive-item a:hover {{ border-color: var(--text2); }}
+  .archive-empty {{ color: var(--text2); font-size: 14px; }}
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Утренние брифы</h1>
+  <p class="subtitle">Архив — выберите дату</p>
+  <ul class="archive">
+{rows or empty}
+  </ul>
+</div>
+</body>
+</html>"""
     (briefs_dir / "index.html").write_text(index_html, encoding="utf-8")
 
 

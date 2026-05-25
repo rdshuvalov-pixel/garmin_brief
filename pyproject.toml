@@ -4,7 +4,8 @@ version = "0.1.0"
 description = "Hermes morning recovery brief from Garmin Connect"
 requires-python = ">=3.9"
 dependencies = [
-    "garminconnect",
+    "garminconnect==0.2.8",
+    "garth>=0.4.23,<0.5",
     "curl_cffi",
     "python-dotenv",
     "pyyaml",

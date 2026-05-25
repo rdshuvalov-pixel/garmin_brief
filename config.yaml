@@ -32,3 +32,9 @@ scripts:
   run_morning_brief: scripts/run_morning_brief.py
   publish_brief: scripts/publish_brief.py
   serve_brief: scripts/serve_brief.py
+  trigger_server: scripts/trigger_server.py
+
+# HTTP trigger (Hermes Cloud → VPS)
+trigger:
+  port: 8787
+  enabled: true

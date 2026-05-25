@@ -63,25 +63,37 @@ cp .env.example .env
 | `VERCEL_TOKEN` | Токен Vercel (VPS, auto-deploy) |
 | `VERCEL_ORG_ID` | ID организации Vercel |
 | `VERCEL_PROJECT_ID` | ID проекта Vercel |
+| `TRIGGER_SECRET` | Секрет для POST `/trigger` (VPS, Hermes Cloud) |
+| `TRIGGER_PORT` | Порт trigger-сервера (8787) |
 
 Несекретные дефолты — в `config.yaml`; env их перекрывает.
 
-## Hermes Agent
+## Архитектура (VPS + Vercel + Hermes Cloud)
 
-Метаданные навыка: [`skills/SKILL.md`](skills/SKILL.md)
+- **VPS** — cron + HTTP trigger, Garmin, генерация
+- **Vercel** — публичные HTML (`/briefs/`)
+- **Hermes Cloud** — `POST /trigger` на VPS, просмотр брифов через Vercel URL
 
-Подключение в `~/.hermes/config.yaml`:
+Подробно: [docs/architecture.md](docs/architecture.md)
+
+## Hermes Agent (Cloud)
+
+Skill: [`skills/SKILL.md`](skills/SKILL.md)
+
+**Не** полагайся на `--workdir` для prod — агент в облаке дергает webhook:
+
+```bash
+curl -X POST "$TRIGGER_URL/trigger" \
+  -H "Authorization: Bearer $TRIGGER_SECRET" \
+  -d '{"force": true, "attempt": 7}'
+```
+
+Локальная отладка с клоном репо:
 
 ```yaml
 skills:
   external_dirs:
     - "/path/to/garmin_brief"
-```
-
-Или в чате:
-
-```bash
-hermes chat --skills garmin-brief --workdir "/path/to/garmin_brief"
 ```
 
 ## VPS + Vercel
@@ -100,6 +112,11 @@ BRIEF_HOST=vercel bash deploy/install-vps.sh
 Инструкция: [docs/deploy-vercel.md](docs/deploy-vercel.md) · [deploy/README.md](deploy/README.md)
 
 ## Локально (без Vercel)
+
+```bash
+.venv/bin/python scripts/serve_brief.py
+# BRIEF_PUBLIC_BASE_URL=http://127.0.0.1:8765
+```
 
 ## Тесты
 

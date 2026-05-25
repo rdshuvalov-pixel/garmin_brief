@@ -2,16 +2,18 @@
 
 ## Схема
 
+См. полная диаграмма: [docs/architecture.md](architecture.md)
+
 ```text
-VPS (cron)                         Vercel (CDN)
-  run_morning_brief.py    →        web/briefs/*.html
-  Garmin + LLM + JSON              публичные ссылки
-  publish_html → web/     →        vercel deploy (auto)
-  Telegram ← BRIEF_PUBLIC_BASE_URL
+VPS cron + HTTP trigger (:8787)     Vercel (CDN)
+  run_morning_brief.py       →      web/briefs/*.html
+  Hermes Cloud POST /trigger →      архив + навигация
+  vercel deploy              →
 ```
 
-- **VPS** — Garmin, cron, `.env`, данные в `data/`, токены Garmin
-- **Vercel** — только статика из `web/` (брифы по HTTPS)
+- **VPS** — Garmin, cron, trigger, `.env`, `data/`
+- **Vercel** — только статика
+- **Hermes Cloud** — `POST /trigger`, чтение `/briefs/` на Vercel
 
 ## 1. Vercel (один раз)
 
@@ -39,11 +41,29 @@ cat ../.vercel/project.json   # orgId, projectId
 BRIEF_PUBLIC_BASE_URL=https://your-project.vercel.app
 
 VERCEL_TOKEN=...
-VERCEL_ORG_ID=...      # из .vercel/project.json → orgId
-VERCEL_PROJECT_ID=...  # из .vercel/project.json → projectId
+VERCEL_ORG_ID=...
+VERCEL_PROJECT_ID=...
+
+TRIGGER_SECRET=...       # openssl rand -hex 32
+TRIGGER_PORT=8787
 ```
 
-`BRIEF_PUBLIC_BASE_URL` **без** trailing slash. Telegram-ссылки: `{URL}/briefs/YYYY-MM-DD.html`
+`BRIEF_PUBLIC_BASE_URL` **без** trailing slash.
+
+Hermes Cloud: `TRIGGER_URL=http://VPS_IP:8787` (не коммитить secret в skill repo).
+
+## 2b. HTTP trigger (Hermes Cloud)
+
+После `TRIGGER_SECRET` в `.env` — `install-vps.sh` ставит `hermes-brief-trigger`.
+
+```bash
+ufw allow 8787/tcp
+curl http://127.0.0.1:8787/health
+curl -X POST http://127.0.0.1:8787/trigger \
+  -H "Authorization: Bearer $TRIGGER_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"force": true, "attempt": 7}'
+```
 
 ## 3. VPS (первый раз)
 

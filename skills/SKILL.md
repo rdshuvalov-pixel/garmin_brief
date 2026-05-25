@@ -19,83 +19,85 @@ homepage: "https://github.com/rdshuvalov-pixel/garmin_brief"
 
 Утренний recovery-бриф из Garmin Connect: детерминированный scoring (Green/Yellow/Red/Grey), короткий Telegram + полный LLM-текст в HTML.
 
-**Корень навыка:** любой путь после `git clone`.  
-**VPS (рекомендуется):** `/opt/garmin-brief`
+**Prod VPS:** `/opt/garmin-brief`  
+**HTML:** Vercel (`BRIEF_PUBLIC_BASE_URL`)  
+**Архитектура:** `docs/architecture.md`
 
 ## Когда использовать
 
-- вопросы про утренний бриф Garmin / recovery / HRV / статус дня
-- ручной запуск, пересборка или отладка брифа
-- не пришёл Telegram или ссылка на HTML не открывается
-- деплой или обновление на VPS
-- первая авторизация Garmin (MFA)
+- утренний бриф Garmin / recovery / HRV
+- ручной запуск или пересборка
+- Telegram / ссылка не работает
+- деплой VPS или Vercel
+- Garmin MFA
 
-## Архитектура
+## Архитектура (3 площадки)
 
 ```
-cron (07:00–08:30, каждые 15 мин)
-  → scripts/run_morning_brief.py --attempt N
-  → fetch Garmin → normalize → SQLite baselines → signal_scorer (без LLM)
-  → generate_telegram (шаблон) + build_narrative (OpenRouter LLM)
-  → save data/briefs/morning_YYYY-MM-DD.json
-  → publish_html → web/briefs/YYYY-MM-DD.html
-  → vercel deploy (если VERCEL_TOKEN) → HTTPS
-  → Telegram (короткий текст + brief_url)
+VPS cron (07:00–08:30) ──→ run_morning_brief.py
+Hermes Cloud POST /trigger ──→ run_morning_brief.py (тот же VPS)
+  → Garmin → scoring → LLM → JSON + HTML
+  → vercel deploy → https://….vercel.app/briefs/
+  → Telegram
 ```
 
-**LLM не выбирает статус дня** — только пишет развёрнутый markdown в `brief_html`.
+**Hermes Cloud не запускает Python локально** — только HTTP webhook на VPS или чтение URL Vercel.
 
-Правила интерпретации метрик: `docs/metrics-guide.md`
+## Hermes Cloud — удалённый запуск (основной)
 
-## Переменные окружения
-
-См. `.env.example`. Параметры по умолчанию — в `config.yaml`.
-
-На VPS `BRIEF_PUBLIC_BASE_URL` должен быть публичным URL, не `127.0.0.1`.
-
-## Команды (из корня навыка)
+Пользователь хранит на VPS: `TRIGGER_URL`, `TRIGGER_SECRET` (не в git).
 
 ```bash
-export HERMES_GARMIN_ROOT="$(git rev-parse --show-toplevel)"
-PROJECT="${HERMES_GARMIN_ROOT:-/opt/garmin-brief}"
+# Health
+curl -s "$TRIGGER_URL/health"
+
+# Запустить бриф сейчас
+curl -s -X POST "$TRIGGER_URL/trigger" \
+  -H "Authorization: Bearer $TRIGGER_SECRET" \
+  -H "Content-Type: application/json" \
+  -d '{"force": true, "attempt": 7}'
+
+# Статус последнего job
+curl -s "$TRIGGER_URL/status" -H "Authorization: Bearer $TRIGGER_SECRET"
+```
+
+Пример: `TRIGGER_URL=http://VPS_IP:8787`
+
+После 202 Accepted — бриф идёт 1–3 мин (Garmin + LLM). Ссылка: `$BRIEF_PUBLIC_BASE_URL/briefs/YYYY-MM-DD.html`
+
+**Просмотр архива без VPS:**
+
+```bash
+curl -s "$BRIEF_PUBLIC_BASE_URL/briefs/"
+# или конкретный день: .../briefs/2026-05-24.html
+```
+
+## VPS — команды по SSH
+
+```bash
+PROJECT=/opt/garmin-brief
+PY=$PROJECT/.venv/bin/python
 cd "$PROJECT"
-PY=.venv/bin/python
 ```
 
 | Действие | Команда |
 |----------|---------|
-| Garmin MFA (один раз) | `$PY scripts/login.py` |
+| Garmin MFA | `$PY scripts/login.py` |
 | Запуск брифа | `$PY scripts/run_morning_brief.py --force --attempt 7` |
 | Пересборка HTML | `$PY scripts/publish_brief.py --date YYYY-MM-DD` |
-| Веб-сервер | `$PY scripts/serve_brief.py --host 0.0.0.0 --port 8765` |
+| Все HTML + nav | `$PY scripts/republish_all_briefs.py` |
+| Vercel deploy | `bash scripts/deploy_vercel.sh` |
+| Trigger server | `$PY scripts/trigger_server.py` (systemd: `hermes-brief-trigger`) |
 
-Cron: `cron/morning-brief.cron.example` (локально), `deploy/morning-brief.cron.vps` (VPS).
+Cron: `deploy/morning-brief.cron.vps`
 
-## Артефакты
+## Переменные (.env на VPS)
 
-| Файл | Содержимое |
-|------|------------|
-| `data/raw/garmin_YYYY-MM-DD.json` | сырой fetch |
-| `data/briefs/morning_YYYY-MM-DD.json` | полный бриф + `brief_html` |
-| `web/briefs/YYYY-MM-DD.html` | опубликованная страница |
-
-## Деплой (VPS + Vercel)
-
-```bash
-git clone https://github.com/rdshuvalov-pixel/garmin_brief.git /opt/garmin-brief
-cd /opt/garmin-brief
-cp .env.example .env && nano .env
-# BRIEF_PUBLIC_BASE_URL=https://xxx.vercel.app
-# VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID
-
-BRIEF_HOST=vercel bash deploy/install-vps.sh
-.venv/bin/python scripts/login.py
-```
-
-Подробно: `docs/deploy-vercel.md`
+См. `.env.example`: Garmin, OpenRouter, Telegram, `BRIEF_PUBLIC_BASE_URL`, Vercel, `TRIGGER_SECRET`, `TRIGGER_PORT`.
 
 ## Чего не делать
 
-- Не менять Green/Yellow/Red через LLM — только `signal_scorer`
-- Не коммитить `.env` и Garmin-токены
-- Не ставить `BRIEF_PUBLIC_BASE_URL=http://127.0.0.1` на VPS с Telegram
+- Не запускать бриф на Vercel (только статика)
+- Не дублировать cron в Hermes Cloud
+- Не менять Green/Yellow/Red через LLM
+- Не коммитить `.env`

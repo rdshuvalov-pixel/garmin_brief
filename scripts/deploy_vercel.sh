@@ -6,13 +6,19 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+ENV_FILE="$ROOT/.env"
 
-if [[ -f "$ROOT/.env" ]]; then
-  set -a
-  # shellcheck disable=SC1091
-  source "$ROOT/.env"
-  set +a
-fi
+_read_env() {
+  local key="$1"
+  if [[ ! -f "$ENV_FILE" ]]; then
+    return
+  fi
+  grep -E "^${key}=" "$ENV_FILE" | tail -1 | cut -d= -f2- || true
+}
+
+VERCEL_TOKEN="$(_read_env VERCEL_TOKEN)"
+VERCEL_ORG_ID="$(_read_env VERCEL_ORG_ID)"
+VERCEL_PROJECT_ID="$(_read_env VERCEL_PROJECT_ID)"
 
 if [[ -z "${VERCEL_TOKEN:-}" ]]; then
   echo "ERROR: VERCEL_TOKEN not set in .env" >&2

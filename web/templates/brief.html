@@ -50,10 +50,20 @@
   .narrative ul { padding-left: 18px; margin-bottom: 8px; }
   .narrative strong { font-weight: 600; }
   .theme-btn { border: 0.5px solid var(--border); background: var(--surface); border-radius: var(--radius-sm); padding: 6px 10px; cursor: pointer; color: var(--text2); font-size: 12px; }
+  .brief-nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; font-size: 13px; }
+  .brief-nav a { color: var(--text2); text-decoration: none; padding: 6px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); background: var(--surface); }
+  .brief-nav a:hover { color: var(--text); border-color: var(--text3); }
+  .brief-nav .nav-disabled { color: var(--text3); padding: 6px 10px; border: 0.5px solid transparent; }
+  .brief-nav .nav-archive { margin-left: auto; }
 </style>
 </head>
-<body>
+<body data-brief-date="{{DATE}}">
 <div class="page">
+  <nav id="brief-nav" class="brief-nav" aria-label="Навигация по брифам">
+    <span class="nav-disabled">← …</span>
+    <a href="index.html" class="nav-archive">Все брифы</a>
+    <span class="nav-disabled">… →</span>
+  </nav>
   <div class="header">
     <div>
       <h1 class="brief-title">Утренний бриф</h1>
@@ -101,6 +111,30 @@ function toggleTheme() {
   if (saved === 'dark' || (!saved && matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.setAttribute('data-theme', 'dark');
   }
+})();
+(function() {
+  const cur = document.body.dataset.briefDate;
+  if (!cur) return;
+  fetch('manifest.json')
+    .then(function(r) { return r.ok ? r.json() : []; })
+    .then(function(dates) {
+      if (!Array.isArray(dates) || !dates.length) return;
+      const i = dates.indexOf(cur);
+      if (i < 0) return;
+      const nav = document.getElementById('brief-nav');
+      if (!nav) return;
+      const newer = i > 0 ? dates[i - 1] : null;
+      const older = i < dates.length - 1 ? dates[i + 1] : null;
+      nav.innerHTML =
+        (newer
+          ? '<a href="' + newer + '.html">← ' + newer + '</a>'
+          : '<span class="nav-disabled">← новее</span>') +
+        '<a href="index.html" class="nav-archive">Все брифы</a>' +
+        (older
+          ? '<a href="' + older + '.html">' + older + ' →</a>'
+          : '<span class="nav-disabled">старее →</span>');
+    })
+    .catch(function() {});
 })();
 </script>
 </body>
