@@ -20,12 +20,6 @@ brief:
   public_base_url: https://your-project.vercel.app
   host: vercel  # vercel | local
 
-# Утренний cron
-cron:
-  timezone: Europe/Lisbon
-  final_attempt: 7
-  interval_minutes: 15
-
 # Точки входа (scripts/)
 scripts:
   login: scripts/login.py

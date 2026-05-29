@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from hermes.config import Config
+from hermes.config import Config, brief_public_base_url_warnings
 from hermes.brief.vercel_deploy import deploy_vercel_if_configured
 
 logger = logging.getLogger(__name__)
@@ -238,11 +238,7 @@ def _optional_section(label: str, data: Any) -> str:
 
 
 def warn_if_local_brief_url(config: Config) -> None:
-    url = config.brief_public_base_url
-    if "127.0.0.1" in url or "localhost" in url:
-        if config.telegram_bot_token and config.telegram_chat_id:
-            logger.warning(
-                "BRIEF_PUBLIC_BASE_URL=%s — ссылка в Telegram не откроется с телефона. "
-                "Укажи URL Vercel (https://….vercel.app) или публичный IP VPS.",
-                url,
-            )
+    if not (config.telegram_bot_token and config.telegram_chat_id):
+        return
+    for message in brief_public_base_url_warnings(config.brief_public_base_url):
+        logger.warning(message)

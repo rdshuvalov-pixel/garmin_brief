@@ -5,10 +5,8 @@
 ```mermaid
 flowchart LR
   subgraph vps [VPS /opt/garmin-brief]
-    Cron[cron 07:00-08:30]
     Trigger[HTTP trigger :8787]
     Job[run_morning_brief.py]
-    Cron --> Job
     Trigger --> Job
     Job --> Data[data + web/briefs]
     Job --> VercelCLI[vercel deploy]
@@ -29,16 +27,15 @@ flowchart LR
 
 | Площадка | Что делает | Что не делает |
 |----------|------------|---------------|
-| **VPS** | Garmin, LLM, cron, `.env`, SQLite, `vercel deploy` | Не отдаёт HTML пользователям (режим vercel) |
+| **VPS** | Garmin, LLM, HTTP trigger, `.env`, SQLite, `vercel deploy` | Не отдаёт HTML пользователям (режим vercel) |
 | **Vercel** | HTTPS, архив брифов, навигация по датам | Не запускает Python, нет секретов |
-| **Hermes Cloud** | Skill, ручной запуск через webhook, чтение URL | Не хранит prod `.env`, не крутит cron |
+| **Hermes Cloud** | Skill, запуск через webhook, чтение URL | Не хранит prod `.env` |
 
 ## Запуск брифа
 
 | Сценарий | Механизм |
 |----------|----------|
-| Каждое утро | VPS cron → [`deploy/morning-brief.cron.vps`](../deploy/morning-brief.cron.vps) |
-| «Запусти сейчас» из Hermes | `POST /trigger` на VPS |
+| «Запусти сейчас» / утро | Hermes → `POST /trigger` на VPS |
 | Отладка на VPS | SSH → `scripts/run_morning_brief.py` |
 | Посмотреть старый бриф | GET Vercel `/briefs/` или `/briefs/YYYY-MM-DD.html` |
 

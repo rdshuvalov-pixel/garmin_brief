@@ -85,6 +85,32 @@ class Config:
         return f"{base}/briefs/{date}.html"
 
 
+def brief_public_base_url_warnings(url: str) -> list[str]:
+    """Return human-readable warnings for a misconfigured public brief URL."""
+    warnings: list[str] = []
+    normalized = url.rstrip("/")
+
+    if "127.0.0.1" in normalized or "localhost" in normalized:
+        warnings.append(
+            f"BRIEF_PUBLIC_BASE_URL={url} — ссылка в Telegram не откроется с телефона. "
+            "Укажи URL Vercel (https://….vercel.app) или публичный IP VPS."
+        )
+
+    if ".vercel.ap/" in normalized or normalized.endswith(".vercel.ap"):
+        warnings.append(
+            f"BRIEF_PUBLIC_BASE_URL={url} — опечатка в домене (.vercel.ap вместо .vercel.app). "
+            "Telegram-ссылки не откроются."
+        )
+
+    if "vercel.app" in normalized and not normalized.endswith(".vercel.app"):
+        if ".vercel.app/" not in normalized:
+            warnings.append(
+                f"BRIEF_PUBLIC_BASE_URL={url} — проверь домен Vercel, ожидается …vercel.app"
+            )
+
+    return warnings
+
+
 def load_config() -> Config:
     project_root = _project_root()
     yaml_cfg = _load_yaml_defaults()

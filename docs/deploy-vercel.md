@@ -5,13 +5,13 @@
 См. полная диаграмма: [docs/architecture.md](architecture.md)
 
 ```text
-VPS cron + HTTP trigger (:8787)     Vercel (CDN)
+VPS HTTP trigger (:8787)            Vercel (CDN)
   run_morning_brief.py       →      web/briefs/*.html
   Hermes Cloud POST /trigger →      архив + навигация
   vercel deploy              →
 ```
 
-- **VPS** — Garmin, cron, trigger, `.env`, `data/`
+- **VPS** — Garmin, trigger, `.env`, `data/`
 - **Vercel** — только статика
 - **Hermes Cloud** — `POST /trigger`, чтение `/briefs/` на Vercel
 
@@ -85,7 +85,6 @@ apt install -y nodejs
 
 BRIEF_HOST=vercel bash deploy/install-vps.sh
 .venv/bin/python scripts/login.py
-crontab -e   # deploy/morning-brief.cron.vps
 ```
 
 `git clone` сам создаёт `/opt/garmin-brief`, если родитель `/opt` уже есть.  

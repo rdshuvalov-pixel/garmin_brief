@@ -15,7 +15,7 @@ garmin-brief/
 ├── scripts/            # точки входа
 ├── src/                # основная логика (models, jobs, garmin, …)
 ├── docs/               # справочники
-├── deploy/             # VPS: systemd, cron
+├── deploy/             # VPS: systemd, trigger
 ├── tests/              # pytest
 └── web/                # шаблоны и опубликованные HTML
 ```
@@ -70,7 +70,7 @@ cp .env.example .env
 
 ## Архитектура (VPS + Vercel + Hermes Cloud)
 
-- **VPS** — cron + HTTP trigger, Garmin, генерация
+- **VPS** — HTTP trigger, Garmin, генерация
 - **Vercel** — публичные HTML (`/briefs/`)
 - **Hermes Cloud** — `POST /trigger` на VPS, просмотр брифов через Vercel URL
 
@@ -98,7 +98,7 @@ skills:
 
 ## VPS + Vercel
 
-**VPS** — cron, Garmin, генерация. **Vercel** — публичные HTML-брифы.
+**VPS** — trigger, Garmin, генерация. **Vercel** — публичные HTML-брифы.
 
 ```bash
 git clone https://github.com/rdshuvalov-pixel/garmin_brief.git /opt/garmin-brief

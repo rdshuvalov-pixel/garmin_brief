@@ -11,7 +11,7 @@ required_env:
   - TELEGRAM_BOT_TOKEN
   - TELEGRAM_CHAT_ID
   - BRIEF_PUBLIC_BASE_URL
-tags: [Garmin, Health, Morning Brief, Telegram, Cron, VPS, Vercel]
+tags: [Garmin, Health, Morning Brief, Telegram, VPS, Vercel]
 homepage: "https://github.com/rdshuvalov-pixel/garmin_brief"
 ---
 
@@ -34,8 +34,7 @@ homepage: "https://github.com/rdshuvalov-pixel/garmin_brief"
 ## Архитектура (3 площадки)
 
 ```
-VPS cron (07:00–08:30) ──→ run_morning_brief.py
-Hermes Cloud POST /trigger ──→ run_morning_brief.py (тот же VPS)
+Hermes Cloud POST /trigger ──→ run_morning_brief.py (VPS)
   → Garmin → scoring → LLM → JSON + HTML
   → vercel deploy → https://….vercel.app/briefs/
   → Telegram
@@ -89,8 +88,6 @@ cd "$PROJECT"
 | Vercel deploy | `bash scripts/deploy_vercel.sh` |
 | Trigger server | `$PY scripts/trigger_server.py` (systemd: `hermes-brief-trigger`) |
 
-Cron: `deploy/morning-brief.cron.vps`
-
 ## Переменные (.env на VPS)
 
 См. `.env.example`: Garmin, OpenRouter, Telegram, `BRIEF_PUBLIC_BASE_URL`, Vercel, `TRIGGER_SECRET`, `TRIGGER_PORT`.
@@ -98,6 +95,5 @@ Cron: `deploy/morning-brief.cron.vps`
 ## Чего не делать
 
 - Не запускать бриф на Vercel (только статика)
-- Не дублировать cron в Hermes Cloud
 - Не менять Green/Yellow/Red через LLM
 - Не коммитить `.env`

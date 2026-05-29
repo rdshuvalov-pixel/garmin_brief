@@ -71,9 +71,6 @@ else
   systemctl --no-pager status hermes-brief-web || true
 fi
 
-echo "==> Cron hint (install manually: crontab -e)"
-echo "    See: $PROJECT_ROOT/deploy/morning-brief.cron.vps"
-
 echo ""
 echo "Done."
 if [[ "$BRIEF_HOST" == "vercel" ]]; then

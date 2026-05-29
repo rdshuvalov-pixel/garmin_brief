@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Entrypoint for morning recovery brief cron job."""
+"""Entrypoint for morning recovery brief job."""
 
 import argparse
 import logging
@@ -36,7 +36,7 @@ def main() -> int:
         default=1,
         choices=range(1, FINAL_ATTEMPT + 1),
         metavar=f"1-{FINAL_ATTEMPT}",
-        help="Poll attempt number (1=07:00 … 7=08:30 final)",
+        help="Poll attempt (7 = final, create Grey if HRV missing)",
     )
     parser.add_argument(
         "--force",

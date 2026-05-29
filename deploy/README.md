@@ -25,7 +25,6 @@ cp .env.example .env && nano .env
 apt install -y nodejs git
 BRIEF_HOST=vercel bash deploy/install-vps.sh
 .venv/bin/python scripts/login.py
-crontab -e   # deploy/morning-brief.cron.vps
 ```
 
 **Обновления с GitHub:**
@@ -47,8 +46,7 @@ BRIEF_HOST=local bash deploy/install-vps.sh
 |------|------------|
 | `bootstrap-vps.sh` | первый раз: mkdir + git clone + install |
 | `hermes-brief-trigger.service` | HTTP trigger для Hermes Cloud (:8787) |
-| `install-vps.sh` | venv, cron hint; trigger если TRIGGER_SECRET |
-| `morning-brief.cron.vps` | 8 утренних poll'ов |
+| `install-vps.sh` | venv; trigger если TRIGGER_SECRET |
 | `hermes-brief-web.service` | локальный web (режим local) |
 | `../vercel.json` | конфиг Vercel (output: web) |
 | `../scripts/deploy_vercel.sh` | ручной деплoy HTML |
